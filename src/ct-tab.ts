@@ -10,6 +10,12 @@ import { CtLit, customElement, property } from "./ct-lit.js";
 export class CtTab extends CtLit {
 	@property({ type: Boolean, reflect: true }) selected = false;
 
+	protected updated(): void {
+		this.setAttribute("role", "tab");
+		this.setAttribute("aria-selected", this.selected ? "true" : "false");
+		this.tabIndex = this.selected ? 0 : -1;
+	}
+
 	render() {
 		return html`
 			<style>

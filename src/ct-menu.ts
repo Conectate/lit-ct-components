@@ -8,6 +8,7 @@ import {
 	getFloatingMenuSurface,
 	isEventInsideMenuTree,
 	menuPanelStyles,
+	menuTriggerControl,
 	openFloatingMenuSurface,
 	setTransformOrigin,
 	shouldKeepMenuOpen,
@@ -105,7 +106,7 @@ export class CtMenu extends CtLit implements FloatingMenuOwner {
 				this._teardownPanel();
 				this._closeNestedSubmenus();
 			}
-			this.setAttribute("aria-expanded", String(this.opened));
+			this._syncTriggerA11y();
 			this.dispatchEvent(new CustomEvent("open", { detail: this.opened }));
 		}
 
@@ -149,6 +150,16 @@ export class CtMenu extends CtLit implements FloatingMenuOwner {
 		}
 	};
 
+	private _syncTriggerA11y() {
+		this.removeAttribute("aria-expanded");
+		const trigger = this._getReference();
+		const control = menuTriggerControl(trigger);
+		if (!control || control === this) return;
+		control.setAttribute("aria-haspopup", "menu");
+		control.setAttribute("aria-expanded", String(Boolean(this.opened)));
+		if (this._panel?.id) control.setAttribute("aria-controls", this._panel.id);
+	}
+
 	private _getReference(): Element {
 		const triggers = this.shadowRoot?.querySelectorAll("slot[name='trigger'], slot[name='dropdown-trigger']");
 		if (triggers) {
@@ -184,6 +195,7 @@ export class CtMenu extends CtLit implements FloatingMenuOwner {
 		}
 
 		openFloatingMenuSurface(getFloatingMenuSurface(this._panel));
+		this._syncTriggerA11y();
 
 		this._startPositioning();
 		staggerMenuItems(Array.from(this._panel.children));

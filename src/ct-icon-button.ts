@@ -63,7 +63,6 @@ export class CtIconButton extends LitElement {
 			position: relative;
 			box-sizing: border-box;
 			border: none;
-			outline: none;
 			background-color: transparent;
 			fill: currentcolor;
 			color: inherit;
@@ -71,6 +70,10 @@ export class CtIconButton extends LitElement {
 			cursor: pointer;
 			user-select: none;
 			padding: calc((var(--ct-icon-size, 24px) * 2 - var(--ct-icon-size, 24px)) / 2);
+		}
+		button:focus-visible {
+			outline: 2px solid var(--color-primary, #00aeff);
+			outline-offset: 3px;
 		}
 	`;
 
@@ -91,8 +94,8 @@ export class CtIconButton extends LitElement {
 	@property({ type: String }) svg?: string;
 
 	/**
-	 * Accessible label for the button
-	 * If not provided, the icon name will be used as the aria-label
+	 * Accessible label for the button.
+	 * Icon-only buttons need this. Visible text in the content slot is used as the name when this is empty.
 	 */
 	@property({ type: String, attribute: "aria-label" })
 	ariaLabel: string = "";
@@ -101,8 +104,8 @@ export class CtIconButton extends LitElement {
 	 * Renders the icon button with proper accessibility attributes
 	 */
 	render() {
-		return html`<button aria-label="${ifDefined(this.ariaLabel || this.icon)}" ?disabled="${this.disabled}">
-			<ct-icon .icon=${this.icon} .svg=${this.svg}> ${this.innerHTML.includes("svg") ? html`<slot></slot>` : nothing} </ct-icon>
+		return html`<button type="button" aria-label="${ifDefined(this.ariaLabel || undefined)}" ?disabled="${this.disabled}">
+			<ct-icon aria-hidden="true" .icon=${this.icon} .svg=${this.svg}> ${this.innerHTML.includes("svg") ? html`<slot></slot>` : nothing} </ct-icon>
 			<span><slot name="content"></slot></span>
 		</button>`;
 	}

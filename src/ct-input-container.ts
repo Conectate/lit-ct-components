@@ -10,6 +10,7 @@
  */
 
 import { css, html } from "lit";
+import { ifDefined } from "lit/directives/if-defined.js";
 
 import { CtLit, customElement, property, query, state } from "./ct-lit.js";
 
@@ -199,16 +200,20 @@ export class CtInputContainer extends CtLit {
 	render() {
 		this.dispatchEvent(new CustomEvent("my-event", { detail: {} }));
 
+		const describedBy = this._invalid && this.errorMessage ? "field-error" : undefined;
 		return html`
-			${this.label ? html` <h4 class="label">${this.label}</h4> ` : html``}
+			<div role="group" aria-labelledby="${ifDefined(this.label ? "field-label" : undefined)}" aria-describedby="${ifDefined(describedBy)}" aria-invalid="${ifDefined(this._invalid ? "true" : undefined)}">
+				${this.label ? html` <h4 id="field-label" class="label">${this.label}</h4> ` : html``}
 
-			<div id="container" class="${this.getHasValue(this.value)}">
-				<slot name="prefix"></slot>
-				<div>
-					${this.placeholder && html` <label class="float-label">${this.placeholder}</label> `}
-					<slot name="input" id="input"></slot>
-					<slot name="suffix"></slot>
-					${this.charCounter ? html` <div class="charCount">${this.countChar}/${this.maxlength}</div> ` : ``}
+				<div id="container" class="${this.getHasValue(this.value)} ${this._invalid ? "error" : ""}">
+					<slot name="prefix"></slot>
+					<div>
+						${this.placeholder ? html` <span class="float-label">${this.placeholder}</span> ` : html``}
+						${this._invalid && this.errorMessage ? html` <span id="field-error" class="float-label error">${this.errorMessage}</span> ` : html``}
+						<slot name="input" id="input"></slot>
+						<slot name="suffix"></slot>
+						${this.charCounter ? html` <div class="charCount">${this.countChar}/${this.maxlength}</div> ` : ``}
+					</div>
 				</div>
 			</div>
 		`;
@@ -278,16 +283,14 @@ export class CtInputContainer extends CtLit {
 	}
 
 	set invalid(val) {
-		if (this.container == null) {
-			return;
-		}
+		const old = this._invalid;
 		this._invalid = val;
-		if (!val) {
-			// remover error
-			this.container.classList.remove("error");
-		} else {
-			this.container.classList.add("error");
-		}
+		this.requestUpdate("invalid", old);
+		this.updateComplete.then(() => {
+			if (this.container == null) return;
+			this.container.classList.toggle("error", Boolean(val));
+			if (!val) this.container.classList.remove("error");
+		});
 	}
 
 	get invalid() {

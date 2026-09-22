@@ -19,7 +19,7 @@ export class CtScrollThreshold extends LitElement {
 	@query("#threshold") $threshold!: HTMLDivElement;
 	render() {
 		return html`<slot></slot>
-			<div id="threshold"></div>`;
+			<div id="threshold" aria-hidden="true"></div>`;
 	}
 
 	firstUpdated() {

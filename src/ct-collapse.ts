@@ -16,7 +16,8 @@ import { CtLit, css, customElement, html, property, query } from "./ct-lit.js";
  * - None specific to this component
  *
  * ### Notes
- * - Only one child element is supported. If multiple elements are needed, wrap them in a container.
+ * - The external button that toggles this panel should set `aria-expanded` and `aria-controls` to this element's id.
+ * - Collapsed content is hidden from assistive technology with `aria-hidden`.
  * - The component automatically calculates required heights for smooth animations.
  *
  * @group lit-ct-components
@@ -34,11 +35,18 @@ export class CtCollapse extends CtLit {
 	 */
 	@query("#content") $content!: HTMLSlotElement;
 
+	private static _ids = 0;
+
 	/**
 	 * Stores the main content element
 	 * @private
 	 */
 	content: any;
+
+	override connectedCallback() {
+		super.connectedCallback();
+		if (!this.id) this.id = `ct-collapse-${++CtCollapse._ids}`;
+	}
 
 	/**
 	 * Stores assigned elements
@@ -86,6 +94,8 @@ export class CtCollapse extends CtLit {
 	 */
 	update(map: Map<PropertyKey, any>) {
 		super.update(map);
+		if (this.opened) this.removeAttribute("aria-hidden");
+		else this.setAttribute("aria-hidden", "true");
 		if (map.has("opened")) {
 			this.calcMaxHeight(this.opened);
 		}

@@ -161,6 +161,7 @@ export function createFloatingMenuPanel(owner: FloatingMenuOwner, styles: CSSRes
 	menu.className = "dd-menu";
 	menu.setAttribute("part", "menu");
 	menu.setAttribute("role", "menu");
+	menu.setAttribute("aria-orientation", "vertical");
 	menu.innerHTML = `<slot></slot>`;
 	shadow.appendChild(menu);
 
@@ -169,6 +170,13 @@ export function createFloatingMenuPanel(owner: FloatingMenuOwner, styles: CSSRes
 
 export function getFloatingMenuSurface(panel: HTMLElement): HTMLElement | null {
 	return panel.shadowRoot?.querySelector(".dd-menu") ?? null;
+}
+
+/** The node a screen reader focuses, which may sit inside the trigger's shadow root. */
+export function menuTriggerControl(trigger: Element): HTMLElement | null {
+	if (!(trigger instanceof HTMLElement)) return null;
+	const inner = trigger.shadowRoot?.querySelector("button, a, [role='menuitem']");
+	return inner instanceof HTMLElement ? inner : trigger;
 }
 
 /** Adds the open state so the surface fades/scales in with a light bounce. */

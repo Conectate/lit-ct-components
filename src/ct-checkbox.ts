@@ -2,6 +2,7 @@ import "./ct-icon.js";
 
 import { PropertyValueMap } from "lit";
 import { classMap } from "lit/directives/class-map.js";
+import { ifDefined } from "lit/directives/if-defined.js";
 
 import { CtLit, css, customElement, html, property, query } from "./ct-lit.js";
 
@@ -198,10 +199,20 @@ export class CtCheckbox extends CtLit {
 	 */
 	render() {
 		return html`
-			<input id="input" type="checkbox" @click=${this.toogleCheck} .checked=${this.checked} .disabled=${this.disabled} @change=${this.handleChange} />
+			<input
+				id="input"
+				type="checkbox"
+				name=${ifDefined(this.name || undefined)}
+				.value=${typeof this.value === "string" || typeof this.value === "number" ? String(this.value) : ""}
+				.indeterminate=${this.indeterminate}
+				@click=${this.toogleCheck}
+				.checked=${this.checked}
+				.disabled=${this.disabled}
+				@change=${this.handleChange}
+			/>
 			<div class="c">
 				<span id="box">
-					<ct-icon id="checkmark" class=${classMap({ rotate: this.indeterminate == false && this.checked })} icon="${this.indeterminate ? "horizontal_rule" : `check`}" dir="ltr"></ct-icon>
+					<ct-icon id="checkmark" aria-hidden="true" class=${classMap({ rotate: this.indeterminate == false && this.checked })} icon="${this.indeterminate ? "horizontal_rule" : `check`}" dir="ltr"></ct-icon>
 				</span>
 				<label id="label" for="input">${this.label}<slot></slot></label>
 			</div>
@@ -213,6 +224,7 @@ export class CtCheckbox extends CtLit {
 	 * @param {PropertyValueMap<any> | Map<PropertyKey, unknown>} _changedProperties - Map of changed properties
 	 */
 	protected updated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+		if (this.$input) this.$input.indeterminate = this.indeterminate;
 		if (_changedProperties.has("checked") && _changedProperties.get("checked") != undefined) {
 			this.change();
 		}

@@ -191,14 +191,13 @@ export class CtButton extends LitElement {
 	];
 	static formAssociated = true;
 	private readonly internals = this.attachInternals();
-	@query(".button") private readonly buttonElement!: HTMLElement | null;
+	@query("button") private readonly buttonElement!: HTMLElement | null;
 
 	@property({ type: Boolean, reflect: true }) raised = false;
 	@property({ type: Boolean, reflect: true }) shadow = false;
 	@property({ type: Boolean, reflect: true }) flat = false;
 	@property({ type: Boolean, reflect: true }) light = false;
 
-	@property({ type: String, reflect: true }) role = "button";
 	@property({ type: String, reflect: true }) type: "button" | "submit" | "reset" = "button";
 	@property({ type: Boolean, reflect: true }) disabled = false;
 	@property({ type: Boolean, reflect: true }) gap = false;

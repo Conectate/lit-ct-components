@@ -2,6 +2,7 @@ import "./ct-icon.js";
 
 import { LitElement, PropertyValueMap, TemplateResult, css, html } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
+import { ifDefined } from "lit/directives/if-defined.js";
 
 import { rovingIndex } from "./ct-button-helpers.js";
 import { icon } from "./icon-list.js";
@@ -56,6 +57,11 @@ export class CtButtonMenu extends LitElement {
 			/* <Icon> */
 			.dropdown-trigger {
 				transition: transform var(--in-speed) ease-in-out;
+				font: inherit;
+				color: inherit;
+				background: none;
+				border: none;
+				padding: 0;
 			}
 			:host([rotate]) :focus-within > .dropdown-trigger {
 				transform: rotate(180deg);
@@ -126,11 +132,10 @@ export class CtButtonMenu extends LitElement {
 	@query(".gui-popup") popup!: HTMLSpanElement;
 
 	render() {
-		return html` <span class="dropdown-trigger center">
-				${this.dropDownTrigger ? this.dropDownTrigger : this.use_slot ? html`<slot name="dropdown"></slot><slot name="trigger"></slot>` : html`<ct-icon icon="${this.icon}"></ct-icon>`}
-			</span>
-			<!-- <ct-icon icon="expand_more"></ct-icon> -->
-			<div class="gui-popup">
+		return html` <button type="button" class="dropdown-trigger center" aria-haspopup="menu" aria-expanded="${this.open ? "true" : "false"}" aria-label="${ifDefined(!this.use_slot && !this.dropDownTrigger ? this.title : undefined)}">
+				${this.dropDownTrigger ? this.dropDownTrigger : this.use_slot ? html`<slot name="dropdown"></slot><slot name="trigger"></slot>` : html`<ct-icon aria-hidden="true" icon="${this.icon}"></ct-icon>`}
+			</button>
+			<div class="gui-popup" role="menu">
 				<slot></slot>
 			</div>`;
 	}

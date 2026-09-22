@@ -79,6 +79,8 @@ export class CtRouter extends CtLit {
 	@state() private pathname: string = "/";
 
 	@query("#root") root!: HTMLElement;
+	@query("#content") private routeContent!: HTMLElement;
+	@state() private _routeStatus = "";
 	unmountComponentAtNode?: (root: any) => any;
 	/**
 	 * Login needed fallback path
@@ -125,13 +127,25 @@ export class CtRouter extends CtLit {
 				animation: fadeEffect 0.5s;
 				min-height: 100%;
 			}
+			.sr-only {
+				position: absolute;
+				width: 1px;
+				height: 1px;
+				padding: 0;
+				margin: -1px;
+				overflow: hidden;
+				clip: rect(0, 0, 0, 0);
+				white-space: nowrap;
+				border: 0;
+			}
 		`
 	];
 
 	render() {
 		return html`
 			<slot id="drawerSlot" name="banner"></slot>
-			<div id="content">${typeof this._currentView == "string" ? unsafeHTML(this._currentView) : this._currentView}</div>
+			<div id="content" role="main" tabindex="-1">${typeof this._currentView == "string" ? unsafeHTML(this._currentView) : this._currentView}</div>
+			<div id="route-status" class="sr-only" role="status" aria-live="polite">${this._routeStatus}</div>
 			<div id="root"></div>
 		`;
 	}
@@ -334,6 +348,13 @@ export class CtRouter extends CtLit {
 				document.title = routes[this.patternMatched].title() as string;
 			}
 		}
+		const announced = (this.patternMatched && routes[this.patternMatched]?.title?.()) || document.title || this.pathname;
+		this._routeStatus = announced ? `Navigated to ${announced}` : "";
+		this.updateComplete.then(() => {
+			const active = document.activeElement;
+			const typing = active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement || active instanceof HTMLSelectElement;
+			if (!typing) this.routeContent?.focus();
+		});
 	}
 	disconnectedCallback() {
 		super.disconnectedCallback();

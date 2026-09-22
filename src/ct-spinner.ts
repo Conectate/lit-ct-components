@@ -13,6 +13,8 @@ import { CtLit, customElement, property } from "./ct-lit.js";
 @customElement("ct-spinner")
 export class CtSpinner extends CtLit {
 	@property({ type: Boolean, reflect: true }) active: boolean = true;
+	@property({ type: Boolean, reflect: true }) decorative = false;
+	@property({ type: String }) label = "Loading";
 	static styles = css`
 		:host([active]) {
 			display: inline-flex;
@@ -41,6 +43,17 @@ export class CtSpinner extends CtLit {
 
 	render() {
 		return html``;
+	}
+
+	protected updated(): void {
+		if (this.decorative || !this.active) {
+			this.setAttribute("aria-hidden", "true");
+			this.removeAttribute("role");
+			return;
+		}
+		this.removeAttribute("aria-hidden");
+		this.setAttribute("role", "status");
+		this.setAttribute("aria-label", this.label);
 	}
 }
 

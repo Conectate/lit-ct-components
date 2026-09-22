@@ -26,6 +26,7 @@ var KEY_CODES = {
 @customElement("ct-autocomplete-suggestions")
 export class CtAutocompleteSuggestions extends CtLit {
 	render() {
+		const results = this.queryFn(this.source, this.text);
 		return html`<style>
 				.wrapper {
 					position: absolute;
@@ -73,13 +74,13 @@ export class CtAutocompleteSuggestions extends CtLit {
 			<div>
 				<!-- unselectable is needed to fix an issue related to the focus being taken away when clicking in the
     results scrollbar -->
-				<ct-card shadow class="wrapper" id="suggestionsWrapper">
-					${this.queryFn(this.source, this.text).map((item, index) => html`<div @click=${this.onClickTemplate}>${this.renderItem(item, index)}</div>`)}
+				<ct-card shadow class="wrapper" id="suggestionsWrapper" role="listbox" aria-label="Suggestions" ?hidden=${results.length === 0}>
+					${results.map((item, index) => html`<div role="option" @click=${this.onClickTemplate}>${this.renderItem(item, index)}</div>`)}
 				</ct-card>
 			</div> `;
 	}
 
-	@property({ type: Object }) renderItem = (item: any, index: number) => html`<button>item ${index}</button>`;
+	@property({ type: Object }) renderItem = (_item: any, index: number) => html`<span>item ${index}</span>`;
 	@property({ type: Array }) source: any[] = [];
 	@property({ type: Array }) queryResult: any[] = [];
 	@property({ type: String }) text = "";

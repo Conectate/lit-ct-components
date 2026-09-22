@@ -223,7 +223,7 @@ export class CTConfirm extends CtLit {
 				}
 			</style>
 			<ct-card shadow border>
-				<div class="title">${this.ttl}</div>
+				<h2 class="title" id="title">${this.ttl}</h2>
 				<div class="body" id="confirmBody"></div>
 				<div id="buttons" class="buttons">
 					<ct-button id="neutral" @click="${this.neutralbtn}">${this.neutral}</ct-button>
@@ -245,12 +245,15 @@ export class CTConfirm extends CtLit {
 		};
 	}
 
+	@query("#ok") $ok!: HTMLElement;
 	@query("#cancel") $cancel!: HTMLElement;
 	@query("#neutral") $neutral!: HTMLElement;
 	@query("#confirmBody") confirmBody!: HTMLElement;
 	@query("#buttons") buttons!: HTMLElement;
 	private onKeyDown = (e: KeyboardEvent) => {
 		if (e.key === "Enter") {
+			const target = e.target as HTMLElement | null;
+			if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) return;
 			e.preventDefault();
 			void this.okbtn(e);
 		}
@@ -269,6 +272,7 @@ export class CTConfirm extends CtLit {
 	firstUpdated() {
 		this.computeBtns(this.ok, this.neutral, this.cancel);
 		this.computeBody(this.body);
+		this.$ok?.focus();
 	}
 
 	computeBtns(ok: string, neutral: string, cancel: string) {
@@ -326,12 +330,15 @@ export class CTConfirmCupertino extends CtLit {
 	solve!: (param: boolean | null | undefined) => void;
 	dialog!: CtDialog;
 
+	@query("#ok") $ok!: HTMLButtonElement;
 	@query("#cancel") $cancel!: HTMLElement;
 	@query("#neutral") $neutral!: HTMLElement;
 	@query("#confirmBody") confirmBody!: HTMLElement;
 	@query("#buttons") buttons!: HTMLElement;
 	private onKeyDown = (e: KeyboardEvent) => {
 		if (e.key === "Enter") {
+			const target = e.target as HTMLElement | null;
+			if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) return;
 			e.preventDefault();
 			void this.okbtn(e);
 		}
@@ -420,8 +427,17 @@ export class CTConfirmCupertino extends CtLit {
 			.buttons_vert .cancel {
 				margin-top: 8px;
 			}
-			[tabindex] {
-				outline: none;
+			button.btn {
+				font: inherit;
+				color: inherit;
+				background: none;
+				border-right: none;
+				border-bottom: none;
+				border-radius: 0;
+			}
+			button.btn:focus-visible {
+				outline: 2px solid var(--color-primary, #0e92c1);
+				outline-offset: -2px;
 			}
 		`
 	];
@@ -438,15 +454,15 @@ export class CTConfirmCupertino extends CtLit {
 
 	render() {
 		return html`
-			<div role="dialog" aria-labelledby="title" tabindex="-1">
+			<div aria-labelledby="title">
 				<div class="container">
 					<h2 id="title">${this.ttl}</h2>
 					<div class="body" id="confirmBody">${typeof this.body === "string" ? unsafeHTML(this.body) : this.body}</div>
 				</div>
 				<div id="buttons" class="buttons">
-					<div class="btn" role="button" tabindex="0" id="neutral" @click="${this.neutralbtn}" aria-disabled="${!!this.neutral}">${this.neutral}</div>
-					<div class="btn" role="button" tabindex="0" id="ok" @click="${this.okbtn}">${this.ok}</div>
-					<div class="btn" role="button" tabindex="0" id="cancel" @click="${this.cancelbtn}">${this.cancel}</div>
+					<button type="button" class="btn" id="neutral" ?hidden="${!this.neutral}" @click="${this.neutralbtn}">${this.neutral}</button>
+					<button type="button" class="btn" id="ok" @click="${this.okbtn}">${this.ok}</button>
+					<button type="button" class="btn" id="cancel" ?hidden="${!this.cancel}" @click="${this.cancelbtn}">${this.cancel}</button>
 				</div>
 			</div>
 		`;
@@ -462,8 +478,8 @@ export class CTConfirmCupertino extends CtLit {
 		};
 	}
 	firstUpdated() {
-		this.buttons.focus();
 		this.computeBtns(this.ok, this.neutral, this.cancel);
+		this.$ok?.focus();
 	}
 
 	computeBtns(ok: string, neutral: string, cancel: string) {

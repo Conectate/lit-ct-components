@@ -232,7 +232,7 @@ class CTPromp extends CtLit {
 	render() {
 		return html`
 			<ct-card shadow decorator>
-				<div class="title">${this.ttl}</div>
+				<h2 class="title" id="title">${this.ttl}</h2>
 				<div class="body">${this.body}</div>
 				<div class="actions">${this.options?.textarea ? html`<ct-textarea id="in"></ct-textarea>` : html`<ct-input id="in"></ct-input>`}</div>
 				<div id="buttons" class="buttons">
@@ -256,13 +256,14 @@ class CTPromp extends CtLit {
 		if (this.options?.rawplaceholder) {
 			this.$in.rawPlaceholder = this.options.rawplaceholder;
 		}
+		this.$in?.focus();
 	}
 
 	computeBtns(ok: string, neutral?: string, cancel?: string) {
 		let auxok = ok || "",
 			auxcancel = cancel || "",
 			auxneutral = neutral || "";
-		if (neutral == null) {
+		if (neutral == null && this.$neutral) {
 			this.$neutral.style.display = "none";
 		}
 		if (auxneutral.length > 15 || auxok.length > 15 || auxcancel.length > 15) {

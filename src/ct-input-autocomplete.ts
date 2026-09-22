@@ -33,11 +33,17 @@ export class CtInputAutocomplete extends CtLit {
 				}
 			</style>
 
-			<div class="input-wrapper" role="combobox" aria-haspopup="true" aria-owns="suggestionsWrapper">
+			<div class="input-wrapper">
 				<ct-input
 					id="autocompleteInput"
+					combobox
+					.expanded="${this._expanded}"
 					.value="${this.text}"
-					@value="${(e: any) => (this.text = e.detail)}"
+					@value="${(e: any) => {
+						this.text = e.detail;
+						const next = String(e.detail?.value ?? e.detail ?? "");
+						this._expanded = next.length > 0;
+					}}"
 					.placeholder=${this.placeholder}
 					.errorMessage=${this.errorMessage}
 					?required=${this.required}
@@ -65,12 +71,14 @@ export class CtInputAutocomplete extends CtLit {
 	@property({ type: Array }) source: any[] = [];
 	@property({ type: String }) textProperty = "text";
 	@property({ type: String }) valueProperty = "value";
-	@property({ type: Object }) renderItem = (item: any, index: number) => html`<button>item ${index}</button>`;
+	@property({ type: Object }) renderItem = (_item: any, index: number) => html`<span>item ${index}</span>`;
 	@state() _text: string = "";
 	@state() _value?: any = undefined;
+	@state() private _expanded = false;
 
 	async onBlur() {
 		await sleep(500);
+		this._expanded = false;
 		this.$autocompleteSuggestions.hiddeSugg();
 	}
 

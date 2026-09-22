@@ -18,6 +18,8 @@ export class CtChartJS extends LitElement {
 	@property({ type: String }) type!: ChartType;
 	@property({ type: Object }) data!: ChartData;
 	@property({ type: Object }) options: ChartOptions = {};
+	@property({ type: String }) label = "";
+	private _busy = true;
 	@property({ type: Number }) delay = 0;
 	@property({ type: Boolean }) autopaint = false;
 	@property({ type: Boolean }) autoadjust = false;
@@ -56,7 +58,7 @@ export class CtChartJS extends LitElement {
 			</style>
 			${this.sizeChart(this.x_, this.y_)}
 			<div class="chart-size dev">
-				<canvas id="canvas" height="${this.y_}" width="${this.x_}"></canvas>
+				<canvas id="canvas" role="img" aria-label="${this.label || "Chart"}" aria-busy="${this._busy ? "true" : "false"}" height="${this.y_}" width="${this.x_}"></canvas>
 			</div>
 		`;
 	}
@@ -78,6 +80,9 @@ export class CtChartJS extends LitElement {
 		} else if (this.delay > 0) {
 			await sleep(this.delay);
 			this.init();
+		} else {
+			this._busy = false;
+			this.requestUpdate();
 		}
 	}
 
@@ -99,6 +104,8 @@ export class CtChartJS extends LitElement {
 			data: data,
 			options: { ...options }
 		});
+		this._busy = false;
+		this.requestUpdate();
 		window.addEventListener("resize", this.resize);
 	}
 

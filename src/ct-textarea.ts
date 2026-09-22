@@ -288,11 +288,14 @@ export class CtTextarea extends CtLit {
 					<div class="row">
 						<slot name="prefix"></slot>
 						<div class="row">
-							${this.errorMessage && html`<label class="float-label error" for="input" aria-live="assertive">${this.errorMessage}</label>`}
-							${this.placeholder && html`<label class="float-label" for="input" aria-live="assertive">${this.placeholder}</label>`}
+							${this.invalid && this.errorMessage ? html`<span id="error" class="float-label error">${this.errorMessage}</span>` : html``}
+							${this.placeholder ? html`<span class="float-label">${this.placeholder}</span>` : html``}
 							<ct-textarea-autogrow
 								id="input"
 								class=${classMap({ "has-value": !this.isEmpty, error: this.invalid && !!this.errorMessage })}
+								.label="${this.label}"
+								.description="${this._description}"
+								?invalid="${this.invalid}"
 								@focus="${this._onFocus}"
 								@blur="${this._onBlur}"
 								@input="${this._onInput}"
@@ -301,6 +304,8 @@ export class CtTextarea extends CtLit {
 								.placeholder="${this.placeholder || this.rawPlaceholder}"
 								?autofocus="${this.autofocus}"
 								?readonly="${this.readonly}"
+								?required="${this.required}"
+								?disabled="${this.disabled}"
 								inputMode="${ifDefined(this.inputmode)}"
 								minlength="${ifDefined(this.minlength)}"
 								maxlength="${ifDefined(this.maxlength)}"
@@ -360,6 +365,13 @@ export class CtTextarea extends CtLit {
 
 	focus() {
 		this.$input?.focus();
+	}
+
+	private get _description(): string {
+		const parts: string[] = [];
+		if (this.invalid && this.errorMessage) parts.push(this.errorMessage);
+		if (this.charCounter) parts.push(`${this.countChar}${this.maxlength ? `/${this.maxlength}` : ""}`);
+		return parts.join(". ");
 	}
 
 	_onFocus() {

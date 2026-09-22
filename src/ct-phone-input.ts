@@ -21,8 +21,9 @@ class CtPhoneInput extends CtLit {
 					color: var(--color-on-surface, #535353);
 				}
 
-				*:focus {
-					outline: 0;
+				input:focus-visible {
+					outline: 2px solid var(--color-primary, #0e92c1);
+					outline-offset: 2px;
 				}
 
 				input {
@@ -68,23 +69,29 @@ class CtPhoneInput extends CtLit {
 					<span class="sep">( +</span>
 					<input
 						id="cd"
+						aria-label="Country code"
+						aria-invalid=${this.invalid ? "true" : "false"}
 						.value="${this.code}"
 						@input="${() => (this.code = this.$cd.value)}"
 						maxlength="3"
 						size="1"
 						placeholder="XXX"
 						type="tel"
+						?required=${this.required}
 						onkeypress="return event.charCode >= 48 &amp;&amp; event.charCode <= 57"
 					/>
 					<span class="sep">)</span>
 					<input
 						id="phoneInput"
+						aria-label="Phone number"
+						aria-invalid=${this.invalid ? "true" : "false"}
 						.value="${this.phone}"
 						@input="${() => (this.phone = this.$phoneInput.value)}"
 						maxlength="17"
 						size="15"
 						placeholder="XXXX XXXX"
 						type="tel"
+						?required=${this.required}
 						onkeypress="return (event.charCode >= 48 &amp;&amp; event.charCode <= 57) || event.charCode == 45 || event.charCode == 32"
 					/>
 				</span>

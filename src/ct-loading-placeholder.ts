@@ -54,6 +54,13 @@ export class CtLoadingPlaceholder extends CtLit {
 		}
 	`;
 	@property({ type: Boolean, reflect: true }) buffering = false;
+
+	override connectedCallback() {
+		super.connectedCallback();
+		this.setAttribute("role", "presentation");
+		this.setAttribute("aria-hidden", "true");
+	}
+
 	render() {
 		return html``;
 	}

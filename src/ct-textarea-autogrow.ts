@@ -54,6 +54,18 @@ export class CtTextareaAutogrow extends CtLit {
 				field-sizing: content;
 			}
 
+			.sr-only {
+				position: absolute;
+				width: 1px;
+				height: 1px;
+				padding: 0;
+				margin: -1px;
+				overflow: hidden;
+				clip: rect(0, 0, 0, 0);
+				white-space: nowrap;
+				border: 0;
+			}
+
 			::-webkit-input-placeholder {
 				color: inherit;
 				opacity: 0.5;
@@ -69,6 +81,7 @@ export class CtTextareaAutogrow extends CtLit {
 
 			<!-- size the input/textarea with a div, because the textarea has intrinsic size in ff -->
 			<div class="textarea-container fit">
+				${this.description ? html`<span id="desc" class="sr-only">${this.description}</span>` : html``}
 				<textarea
 					id="textarea"
 					.value=${this._value}
@@ -80,7 +93,9 @@ export class CtTextareaAutogrow extends CtLit {
 					?required="${this.required}"
 					?disabled="${this.disabled}"
 					rows="${this.rows}"
-					aria-label="${ifDefined(this.label)}"
+					aria-label="${ifDefined(this.label || undefined)}"
+					aria-invalid="${ifDefined(this.invalid ? "true" : undefined)}"
+					aria-describedby="${ifDefined(this.description ? "desc" : undefined)}"
 					minlength="${ifDefined(this.minlength)}"
 					maxlength="${ifDefined(this.maxlength)}"
 					spellcheck="${ifDefined(this.spellcheck)}"
@@ -187,6 +202,8 @@ export class CtTextareaAutogrow extends CtLit {
 	 * Bound to the textarea's `aria-label` attribute.
 	 */
 	@property({ type: String }) label = "";
+	@property({ type: String }) description = "";
+	@property({ type: Boolean }) invalid = false;
 	/**
 	 * Bound to the textarea's `spellcheck` attribute.
 	 */

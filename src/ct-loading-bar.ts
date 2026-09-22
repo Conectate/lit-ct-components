@@ -86,10 +86,10 @@ export class CtLoadingBar extends LitElement {
 					border-radius: 8px;
 				}
 			</style>
-			<div class="horizontal-loader">
-				<div class="horizontal-loader-bar"></div>
-				<div class="horizontal-loader-bar"></div>
-				<div class="horizontal-loader-bar"></div>
+			<div class="horizontal-loader" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuetext="Loading" aria-label="Loading">
+				<div class="horizontal-loader-bar" aria-hidden="true"></div>
+				<div class="horizontal-loader-bar" aria-hidden="true"></div>
+				<div class="horizontal-loader-bar" aria-hidden="true"></div>
 			</div>
 		`;
 	}

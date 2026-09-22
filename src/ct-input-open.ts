@@ -9,7 +9,7 @@
 	found at https://open.grupoconectate.com/PATENTS.txt
  */
 
-import { html } from "lit";
+import { PropertyValues, html } from "lit";
 
 import { CtInput } from "./ct-input.js";
 import { customElement, unsafeHTML } from "./ct-lit.js";
@@ -27,5 +27,25 @@ export class CtInputOpen extends CtInput {
 	}
 	createRenderRoot() {
 		return this;
+	}
+
+	private readonly _fieldUid = `ct-input-${Math.random().toString(36).slice(2, 9)}`;
+
+	protected override updated(changed: PropertyValues) {
+		super.updated(changed);
+		const input = this.querySelector("input[part='input']");
+		if (!(input instanceof HTMLInputElement)) return;
+		if (input.id !== this._fieldUid) {
+			input.id = this._fieldUid;
+			input.dataset.fieldUid = this._fieldUid;
+			this.querySelectorAll("[for='input']").forEach(label => label.setAttribute("for", this._fieldUid));
+		}
+		const error = this.querySelector(".float-label.error");
+		const count = this.querySelector(".charCount");
+		if (error) error.id = `${this._fieldUid}-error`;
+		if (count) count.id = `${this._fieldUid}-count`;
+		const described = [error ? error.id : "", count ? count.id : ""].filter(Boolean).join(" ");
+		if (described) input.setAttribute("aria-describedby", described);
+		else input.removeAttribute("aria-describedby");
 	}
 }

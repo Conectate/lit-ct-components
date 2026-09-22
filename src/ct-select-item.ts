@@ -17,7 +17,10 @@ export class CtSelectItem extends CtLit {
 				padding: 8px;
 				border-bottom: 1px solid var(--color-outline, #89898936);
 			}
-			button {
+			button,
+			.option-text {
+				display: flex;
+				align-items: center;
 				min-width: 170px;
 				color: var(--color-on-surface, #535353);
 				margin: 0;
@@ -70,10 +73,10 @@ export class CtSelectItem extends CtLit {
 	@property({ type: Boolean, reflect: true }) selected = false;
 
 	render() {
-		return html`<div class="cicle" ?hidden=${!this.multi && !this.selected}><ct-icon icon="${this.selected ? `check` : ""}"></ct-icon></div>
-			<button>
+		return html`<div class="cicle" aria-hidden="true" ?hidden=${!this.multi && !this.selected}><ct-icon aria-hidden="true" icon="${this.selected ? `check` : ""}"></ct-icon></div>
+			<span class="option-text">
 				<b><slot></slot></b>
-			</button> `;
+			</span> `;
 	}
 }
 

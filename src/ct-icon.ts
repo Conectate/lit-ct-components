@@ -210,9 +210,19 @@ export class CtIcon extends LitElement {
 		return CtIcon.FontLoaded.get(key);
 	}
 
-	/**
-	 * Lifecycle callback when the component is first updated
-	 */
+	@property({ type: String }) label = "";
+
+	protected updated(): void {
+		const name = this.label || this.getAttribute("aria-label");
+		if (name) {
+			this.removeAttribute("aria-hidden");
+			this.setAttribute("role", "img");
+			if (this.getAttribute("aria-label") !== name) this.setAttribute("aria-label", name);
+			return;
+		}
+		this.removeAttribute("role");
+		if (!this.hasAttribute("aria-hidden")) this.setAttribute("aria-hidden", "true");
+	}
 	protected firstUpdated() {
 		CtIcon.loadFonts(this.fontstyle, this.font);
 	}

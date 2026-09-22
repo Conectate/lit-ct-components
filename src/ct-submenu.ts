@@ -13,6 +13,7 @@ import {
 	getFloatingMenuSurface,
 	isEventInsideMenuTree,
 	menuPanelStyles,
+	menuTriggerControl,
 	openFloatingMenuSurface,
 	resolveFloatingMenuOwner,
 	setTransformOrigin,
@@ -173,7 +174,7 @@ export class CtSubmenu extends CtLit implements FloatingMenuOwner {
 				this._teardownPanel();
 				this._closeNestedSubmenus();
 			}
-			this.setAttribute("aria-expanded", String(this.opened));
+			this._syncTriggerA11y();
 			this.dispatchEvent(new CustomEvent("open", { detail: this.opened }));
 		}
 
@@ -321,6 +322,19 @@ export class CtSubmenu extends CtLit implements FloatingMenuOwner {
 		}
 	};
 
+	private _syncTriggerA11y() {
+		this.removeAttribute("aria-expanded");
+		const assigned = (this.shadowRoot?.querySelector('slot[name="trigger"]') as HTMLSlotElement | null)?.assignedElements({ flatten: true })[0] as HTMLElement | undefined;
+		const fallback = this.$triggerWrap?.querySelector("ct-list-item, button, [tabindex]") as HTMLElement | null;
+		const trigger = assigned ?? fallback;
+		if (!trigger) return;
+		const control = menuTriggerControl(trigger);
+		if (!control) return;
+		control.setAttribute("aria-haspopup", "menu");
+		control.setAttribute("aria-expanded", String(Boolean(this.opened)));
+		if (this._panel?.id) control.setAttribute("aria-controls", this._panel.id);
+	}
+
 	private _focusTrigger() {
 		const assigned = (this.shadowRoot?.querySelector('slot[name="trigger"]') as HTMLSlotElement | null)?.assignedElements({ flatten: true })[0] as HTMLElement | undefined;
 		const fallback = this.$triggerWrap?.querySelector("ct-list-item, button, [tabindex]") as HTMLElement | null;
@@ -373,6 +387,7 @@ export class CtSubmenu extends CtLit implements FloatingMenuOwner {
 		}
 
 		openFloatingMenuSurface(getFloatingMenuSurface(this._panel));
+		this._syncTriggerA11y();
 
 		this._startPositioning();
 		staggerMenuItems(Array.from(this._panel.children));

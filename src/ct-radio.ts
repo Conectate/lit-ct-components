@@ -1,4 +1,5 @@
 import { PropertyValueMap, css, html } from "lit";
+import { ifDefined } from "lit/directives/if-defined.js";
 
 import { CtLit, customElement, property, query } from "./ct-lit.js";
 
@@ -136,7 +137,7 @@ export class CtRadio extends CtLit {
 	@query("#input") $input!: HTMLInputElement;
 	render() {
 		return html`
-			<input id="input" type="checkbox" @click=${this.toogleCheck} .checked=${this.checked} .disabled=${this.disabled} @change=${this.handleChange} />
+			<input id="input" type="radio" name=${ifDefined(this.name)} .value=${this.value || ""} .checked=${this.checked} .disabled=${this.disabled} @change=${this.handleChange} />
 			<div class="c">
 				<span id="box">
 					<div id="checkmark" dir="ltr"></div>
@@ -156,10 +157,6 @@ export class CtRadio extends CtLit {
 
 	click() {
 		this.$input.click();
-	}
-
-	toogleCheck() {
-		this.checked = !this.checked;
 	}
 
 	isFn(obj: any) {

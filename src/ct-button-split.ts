@@ -47,6 +47,8 @@ export class CtButtonSplit extends LitElement {
 	@property({ type: Boolean, reflect: true }) shadow = false;
 	@property({ type: Boolean, reflect: true }) flat = false;
 	@property({ type: Boolean, reflect: true }) light = false;
+	@property({ type: String, reflect: true }) role = "group";
+	@property({ type: String, reflect: true, attribute: "aria-label" }) ariaLabel = "";
 
 	render() {
 		return html`<slot></slot>`;

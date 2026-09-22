@@ -64,6 +64,83 @@ if (window.customModals.closeESC == null)
 
 let dialogID = 0;
 
+const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+function isA11yVisible(el: HTMLElement): boolean {
+	if (el.hasAttribute("hidden") || el.getAttribute("aria-hidden") === "true") return false;
+	const style = getComputedStyle(el);
+	return style.display !== "none" && style.visibility !== "hidden";
+}
+
+function walkTree(node: ParentNode, visit: (el: Element) => void) {
+	const nodes = node.querySelectorAll("*");
+	for (let i = 0; i < nodes.length; i++) {
+		const el = nodes[i];
+		visit(el);
+		const shadow = (el as HTMLElement).shadowRoot;
+		if (shadow) walkTree(shadow, visit);
+	}
+}
+
+function focusableElements(root: ParentNode): HTMLElement[] {
+	const out: HTMLElement[] = [];
+	walkTree(root, el => {
+		if (!(el instanceof HTMLElement)) return;
+		if (!el.matches(FOCUSABLE_SELECTOR) || !isA11yVisible(el)) return;
+		out.push(el);
+	});
+	return out;
+}
+
+function deepestActive(): HTMLElement | null {
+	let el: Element | null = document.activeElement;
+	while (el && (el as HTMLElement).shadowRoot?.activeElement) {
+		el = (el as HTMLElement).shadowRoot!.activeElement;
+	}
+	return el instanceof HTMLElement ? el : null;
+}
+
+function readDialogTitle(el?: HTMLElement | null): string {
+	if (!el) return "";
+	const roots: ParentNode[] = [el];
+	if (el.shadowRoot) roots.push(el.shadowRoot);
+	for (const root of roots) {
+		const heading = root.querySelector("h1, h2, #title, .title");
+		const text = heading?.textContent?.trim();
+		if (text) return text;
+	}
+	return "";
+}
+
+function focusControl(el: HTMLElement) {
+	let current = el;
+	for (let depth = 0; depth < 5; depth++) {
+		const inner = current.shadowRoot?.querySelector(FOCUSABLE_SELECTOR);
+		if (!(inner instanceof HTMLElement) || inner === current) break;
+		current = inner;
+	}
+	current.focus();
+}
+
+function focusDialogContent(host: HTMLElement) {
+	const root = host.shadowRoot;
+	if (!root) {
+		host.focus();
+		return;
+	}
+	let preferred: HTMLElement | null = null;
+	walkTree(root, el => {
+		if (preferred) return;
+		if (el.id === "in" || el.id === "ok") preferred = el as HTMLElement;
+	});
+	if (preferred) {
+		focusControl(preferred);
+		return;
+	}
+	const items = focusableElements(root);
+	(items[0] ?? host).focus();
+}
+
 /**
  * Creates and displays a dialog with the specified content
  *
@@ -321,10 +398,32 @@ export class CtDialog extends CtLit {
 	];
 	dialogID?: string;
 	@property({ type: Boolean }) interactiveDismissDisabled: boolean = false;
-	@property({ type: String, reflect: true }) role: string = "alert";
+	@property({ type: String, reflect: true }) role: string = "dialog";
 	@property({ type: String, reflect: true }) type: typeDialog = "alert";
 	@property({ type: String, reflect: true, attribute: "aria-modal" })
 	ariaModal: string = "true";
+	@property({ type: String, reflect: true, attribute: "aria-label" })
+	ariaLabel = "";
+	@property({ type: Number, reflect: true }) tabindex = -1;
+	private _previouslyFocused: HTMLElement | null = null;
+	private _moveFocusWhenReady = false;
+	private _nameFromContent = false;
+	private _onDialogKeydown = (e: KeyboardEvent) => {
+		if (e.key !== "Tab") return;
+		const root = this.shadowRoot;
+		if (!root) return;
+		const items = focusableElements(root);
+		if (items.length === 0) {
+			e.preventDefault();
+			this.focus();
+			return;
+		}
+		const current = deepestActive();
+		const index = current ? items.indexOf(current) : -1;
+		const next = e.shiftKey ? (index <= 0 ? items.length - 1 : index - 1) : index === -1 || index >= items.length - 1 ? 0 : index + 1;
+		e.preventDefault();
+		items[next].focus();
+	};
 
 	// Vars
 	disableHistoryAPI: boolean = false;
@@ -377,11 +476,21 @@ export class CtDialog extends CtLit {
 			}
 		});
 
-		// if (getClient().os == "ios") {
-		// 	this.updateComplete.then(async () => {
-		// 		if (this._element) this._element.style.borderRadius = "0px";
-		// 	});
-		// }
+		this.updateComplete.then(() => {
+			this._syncDialogName();
+			if (this._moveFocusWhenReady && this.isConnected) {
+				this._moveFocusWhenReady = false;
+				focusDialogContent(this);
+			}
+		});
+	}
+
+	private _syncDialogName() {
+		if (this.ariaLabel && !this._nameFromContent) return;
+		const text = readDialogTitle(this._element);
+		if (!text) return;
+		this._nameFromContent = true;
+		this.ariaLabel = text;
 	}
 
 	render() {
@@ -389,6 +498,7 @@ export class CtDialog extends CtLit {
 			${this.getStylesPref(this.preferences)}
 			<div
 				class="overlay"
+				aria-hidden="true"
 				@click="${(e: MouseEvent) => {
 					e.stopPropagation();
 					if (this.interactiveDismissDisabled) return;
@@ -420,6 +530,7 @@ export class CtDialog extends CtLit {
 
 	disconnectedCallback() {
 		super.disconnectedCallback();
+		this.removeEventListener("keydown", this._onDialogKeydown);
 		window.removeEventListener("popstate", this._closeViaPopState, false);
 		document.removeEventListener("keyup", this._clseDialogESC, false);
 	}
@@ -479,6 +590,10 @@ export class CtDialog extends CtLit {
 	}
 
 	show() {
+		const active = deepestActive();
+		this._previouslyFocused = active && active !== document.body ? active : null;
+		this._moveFocusWhenReady = true;
+		this.addEventListener("keydown", this._onDialogKeydown);
 		document.body.appendChild(this);
 		if (CtDialog.hiddenOverflow) {
 			CtDialog.hiddenOverflow.style.overflow = "hidden";
@@ -576,8 +691,12 @@ export class CtDialog extends CtLit {
 			window.customModals.history.findIndex(d => d.modal == this),
 			1
 		);
+		this.removeEventListener("keydown", this._onDialogKeydown);
+		const previous = this._previouslyFocused;
+		this._previouslyFocused = null;
 		// Elimino el dialogo
 		document.body.removeChild(this);
+		if (previous?.isConnected) previous.focus();
 		if (CtDialog.hiddenOverflow && window.customModals.history.length == 0) {
 			CtDialog.hiddenOverflow.style.overflow = "";
 		}

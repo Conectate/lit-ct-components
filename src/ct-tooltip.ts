@@ -1,6 +1,8 @@
 import { CtLit, css, customElement, html, property } from "./ct-lit.js";
 
 export const tooltipStyles = css`
+	/* Visual-only tooltip. ::before content is not in the accessibility tree.
+	   For screen readers, use <ct-tooltip> so the trigger gets aria-describedby. */
 	/* Add this attribute to the element that needs a tooltip */
 	[data-tooltip] {
 		position: relative;
@@ -125,6 +127,7 @@ export class CtTooltip extends CtLit {
 	@property({ type: String }) for = "";
 	@property({ type: Boolean, reflect: true }) open = false;
 	public context!: HTMLElement | ShadowRoot;
+	private static _id = 0;
 
 	render() {
 		return html`<slot></slot>`;
@@ -132,28 +135,36 @@ export class CtTooltip extends CtLit {
 
 	connectedCallback(): void {
 		super.connectedCallback();
+		this.setAttribute("role", "tooltip");
+		if (!this.id) this.id = `ct-tooltip-${CtTooltip._id++}`;
 		if (!this.for) return;
 		if (this.parentElement) {
 			this.parentElement.style.position = "relative";
 		}
 		let cnx = this.context || this.parentElement;
 		let el = cnx.querySelector(this.for) as HTMLElement;
-		if (el) {
-			el.tabIndex = -1;
-			el.addEventListener("mouseenter", () => {
-				this.open = true;
-			});
-			el.addEventListener("mouseleave", () => {
-				// if focus is on the tooltip, don't close it
-				let isTooltipFocused = document.activeElement === el || (cnx as ShadowRoot).activeElement === el;
-				if (isTooltipFocused) return;
-				this.close();
-			});
-			// if context active element changes, close the tooltip
-			el.addEventListener("blur", () => {
-				this.close();
-			});
-		}
+		if (!el) return;
+		const describedBy = el.getAttribute("aria-describedby");
+		el.setAttribute("aria-describedby", describedBy ? `${describedBy} ${this.id}` : this.id);
+		el.addEventListener("mouseenter", () => {
+			this.open = true;
+		});
+		el.addEventListener("mouseleave", () => {
+			let isTooltipFocused = document.activeElement === el || (cnx as ShadowRoot).activeElement === el;
+			if (isTooltipFocused) return;
+			this.close();
+		});
+		el.addEventListener("focusin", () => {
+			this.open = true;
+		});
+		el.addEventListener("focusout", () => {
+			this.close();
+		});
+	}
+
+	protected updated(): void {
+		if (this.open) this.removeAttribute("aria-hidden");
+		else this.setAttribute("aria-hidden", "true");
 	}
 
 	close() {

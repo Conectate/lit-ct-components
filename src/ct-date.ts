@@ -1,6 +1,6 @@
 import "./ct-input-container.js";
 
-import { TemplateResult, css, html } from "lit";
+import { TemplateResult, css, html, nothing } from "lit";
 
 import { CtLit, customElement, property, query } from "./ct-lit.js";
 
@@ -84,8 +84,9 @@ export class CtDate extends CtLit {
 				align-items: center;
 			}
 
-			*:focus {
-				outline: 0;
+			input:focus-visible {
+				outline: 2px solid var(--color-primary, #0e92c1);
+				outline-offset: 2px;
 			}
 
 			input {
@@ -174,11 +175,14 @@ export class CtDate extends CtLit {
 					<span ?hidden="${this.nodd}">
 						<input
 							id="dd"
+							aria-label="Day"
+							aria-invalid=${this.invalid ? "true" : nothing}
 							maxlength="2"
 							size="2"
 							placeholder="DD"
 							type="tel"
 							.value=${this.dd}
+							?required=${this.required}
 							@input=${() => this.validX("dd", this.$dd?.value || "", 0, 31)}
 							onkeypress="return event.charCode >= 48 && event.charCode <= 57"
 						/>
@@ -186,22 +190,28 @@ export class CtDate extends CtLit {
 					</span>
 					<input
 						id="mm"
+						aria-label="Month"
+						aria-invalid=${this.invalid ? "true" : nothing}
 						maxlength="2"
 						size="2"
 						placeholder="MM"
 						type="tel"
 						.value=${this.mm}
+						?required=${this.required}
 						@input=${() => this.validX("mm", this.$mm?.value || "", 0, 12)}
 						onkeypress="return event.charCode >= 48 && event.charCode <= 57"
 					/>
 					<span>/</span>
 					<input
 						id="yyyy"
+						aria-label="Year"
+						aria-invalid=${this.invalid ? "true" : nothing}
 						maxlength="4"
 						size="4"
 						placeholder="YYYY"
 						type="tel"
 						.value=${this.yyyy}
+						?required=${this.required}
 						@input=${() => this.validX("yyyy", this.$yyyy?.value || "", this.minYYYY, this.maxYYYY)}
 						onkeypress="return event.charCode >= 48 && event.charCode <= 57"
 					/>
@@ -210,22 +220,28 @@ export class CtDate extends CtLit {
 								<span> @ </span>
 								<input
 									id="hh"
+									aria-label="Hour"
+									aria-invalid=${this.invalid ? "true" : nothing}
 									maxlength="2"
 									size="2"
 									placeholder="HH"
 									type="tel"
 									.value=${this.hh}
+									?required=${this.required}
 									@input=${() => this.validX("hh", this.$hh?.value || "", 0, 24)}
 									onkeypress="return event.charCode >= 48 && event.charCode <= 57"
 								/>
 								<span>:</span>
 								<input
 									id="min"
+									aria-label="Minute"
+									aria-invalid=${this.invalid ? "true" : nothing}
 									maxlength="2"
 									size="2"
 									placeholder="mm"
 									type="tel"
 									.value=${this.min}
+									?required=${this.required}
 									@input=${() => this.validX("min", this.$min?.value || "", 0, 59)}
 									onkeypress="return event.charCode >= 48 && event.charCode <= 57"
 								/>

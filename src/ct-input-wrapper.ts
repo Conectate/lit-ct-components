@@ -1,4 +1,5 @@
 import { html } from "lit";
+import { ifDefined } from "lit/directives/if-defined.js";
 
 import { CtLit, customElement, property, query } from "./ct-lit.js";
 
@@ -36,6 +37,7 @@ export class CtInputWrapper extends CtLit {
 		| "button" = "file";
 	@property({ type: String }) accept = "text";
 	@property({ type: Boolean }) multiple = false;
+	@property({ type: String }) label = "";
 	@query("#inputElement") $inputElement!: HTMLInputElement;
 
 	render() {
@@ -62,7 +64,7 @@ export class CtInputWrapper extends CtLit {
 				}
 			</style>
 			<slot></slot>
-			<input @change=${this.callOnChange} .type="${this.type}" .accept="${this.accept}" id="inputElement" ?multiple=${this.multiple} part="input" />`;
+			<input @change=${this.callOnChange} .type="${this.type}" .accept="${this.accept}" id="inputElement" aria-label="${ifDefined(this.label || (this.type === "file" ? "Upload file" : undefined))}" ?multiple=${this.multiple} part="input" />`;
 	}
 
 	callOnChange(e: any) {

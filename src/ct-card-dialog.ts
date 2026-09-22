@@ -22,7 +22,7 @@ window.showCtCardDialog = showCtCardDialog;
 
 /**
  * ## `ct-card-dialog`
- * A card-styled dialog component that presents content in a card format.
+ * The content passed in `el` should include a heading. `ct-dialog` uses that heading as the dialog name.
  *
  * ### Usage
  * ```javascript

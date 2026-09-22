@@ -103,6 +103,17 @@ export class CtCard extends LitElement {
 	@property({ type: Boolean, reflect: true }) secondary = false;
 	@property({ type: Boolean, reflect: true }) tertiary = false;
 	@property({ type: Boolean, reflect: true }) error = false;
+	@property({ type: String }) label = "";
+
+	protected updated(): void {
+		if (this.label) {
+			this.setAttribute("role", "region");
+			this.setAttribute("aria-label", this.label);
+		} else if (this.getAttribute("role") === "region") {
+			this.removeAttribute("role");
+			this.removeAttribute("aria-label");
+		}
+	}
 
 	static styles = [
 		css`
@@ -173,7 +184,7 @@ export class CtCard extends LitElement {
 
 	render() {
 		return html`
-			${this.decorator ? html`<div class="dec"></div>` : ""}
+			${this.decorator ? html`<div class="dec" aria-hidden="true"></div>` : ""}
 			<slot></slot>
 		`;
 	}

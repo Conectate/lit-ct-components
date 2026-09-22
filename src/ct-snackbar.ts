@@ -84,6 +84,14 @@ export class CtSnackbar extends CtLit {
 	alwaysMsg = "";
 	@property({ type: String }) msg = "";
 
+	override connectedCallback() {
+		super.connectedCallback();
+		this.setAttribute("role", "status");
+		this.setAttribute("aria-live", "polite");
+		this.setAttribute("aria-atomic", "true");
+		this.setAttribute("aria-hidden", "true");
+	}
+
 	async open(msg?: string) {
 		// Si esta Abierto
 		if (!msg) {
@@ -98,6 +106,7 @@ export class CtSnackbar extends CtLit {
 			this.close();
 			return null;
 		}
+		this.removeAttribute("aria-hidden");
 		this.classList.add("opened");
 		await sleep(4000);
 		if (this.alwaysMsg != this.msg) {
@@ -113,7 +122,10 @@ export class CtSnackbar extends CtLit {
 		} else if (this.alwaysVisible) {
 			await sleep(200);
 			this.msg = this.alwaysMsg;
+			this.removeAttribute("aria-hidden");
 			this.classList.add("opened");
+		} else {
+			this.setAttribute("aria-hidden", "true");
 		}
 	}
 

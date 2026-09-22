@@ -56,7 +56,10 @@ export class CtLoading extends CtLit {
 			</style>
 			<ct-card shadow decorator>
 				<div class="card-content">
-					<span class="body"> <ct-spinner></ct-spinner>${this.ttl}... </span>
+					<div class="body" role="status" aria-live="polite" aria-atomic="true">
+						<ct-spinner decorative></ct-spinner>
+						<span>${this.ttl}</span>
+					</div>
 				</div>
 			</ct-card>
 		`;
@@ -97,6 +100,8 @@ export function showCtLoading(id?: string, str?: string): CtDialog {
 	let ctConfirm = document.createElement("ct-loading") as CtLoading;
 	if (str) ctConfirm.ttl = str;
 	ctConfirm.dialog = showCtDialog(ctConfirm, id);
+	ctConfirm.dialog.role = "alertdialog";
+	ctConfirm.dialog.ariaLabel = ctConfirm.ttl;
 	return ctConfirm.dialog;
 }
 
@@ -111,6 +116,8 @@ export function showCtLoading2(id?: string, str?: string): CtLoading {
 	let ctConfirm = document.createElement("ct-loading") as CtLoading;
 	if (str) ctConfirm.ttl = str;
 	ctConfirm.dialog = showCtDialog(ctConfirm, id);
+	ctConfirm.dialog.role = "alertdialog";
+	ctConfirm.dialog.ariaLabel = ctConfirm.ttl;
 	return ctConfirm;
 }
 export { CtDialog };

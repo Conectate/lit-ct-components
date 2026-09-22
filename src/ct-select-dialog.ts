@@ -63,6 +63,7 @@ export function showCtSelect<V = any>(title: string, items: any[] = [], value: V
 		selectDialog.value = value;
 	}
 	selectDialog.dialog = showCtDialog(selectDialog);
+	selectDialog.dialog.role = "dialog";
 	// selectDialog.dialog.addEventListener("on-close", () => {
 	// 	selectDialog.solve(undefined);
 	// });
@@ -151,6 +152,7 @@ export class CtSelectBuilder {
 
 	static show(selectDialog: CtSelectDialog) {
 		selectDialog.dialog = showCtDialog(selectDialog);
+		selectDialog.dialog.role = "dialog";
 		return { dialog: selectDialog, result: selectDialog.onResult() };
 	}
 }
@@ -284,8 +286,8 @@ export class CtSelectDialog extends CtLit {
 		let allSelected = items.length > 0 && items.every(item => this.multiValue?.includes(item[this.valueProperty]));
 		return html`
 			<ct-card shadow decorator>
-				<div class="title">${this.ttl}</div>
-				${this.searchable ? html` <ct-input id="search" @value="${(e: CustomEvent<string>) => this._filter(e.detail)}" .placeholder="${this.searchPlaceholder}"> </ct-input> ` : ``}
+				<h2 class="title" id="select-title">${this.ttl}</h2>
+				${this.searchable ? html` <ct-input id="search" @value="${(e: CustomEvent<string>) => this._filter(e.detail)}" .label="${this.searchPlaceholder || "Search"}" .placeholder="${this.searchPlaceholder}"> </ct-input> ` : ``}
 				${this.multi
 					? html`<div style="padding: 8px 24px 0; text-align: right;">
 							<ct-button style="font-weight: bold; cursor: pointer; --color-button: transparent; color: var(--color-primary);" @click="${() => this.toggleSelectAll()}"
@@ -293,14 +295,26 @@ export class CtSelectDialog extends CtLit {
 							>
 						</div>`
 					: ""}
-				<div class="body" id="confirmBody">
+				<div class="body" id="confirmBody" role="listbox" aria-labelledby="select-title" aria-multiselectable="${this.multi ? "true" : "false"}">
 					${repeat(
 						items,
 						(i: any) => i[this.valueProperty],
 						(i: any, index: number) => {
 							let isSelected = this.multi ? this.multiValue?.includes(i[this.valueProperty]) : this.value == i[this.valueProperty];
 							return html`
-								<div class="item ${isSelected ? "selected" : ""}" @click="${(e: MouseEvent) => this.onClickItem(e, i[this.valueProperty])}">
+								<div
+									class="item ${isSelected ? "selected" : ""}"
+									role="option"
+									aria-selected="${isSelected ? "true" : "false"}"
+									tabindex="0"
+									@click="${(e: MouseEvent) => this.onClickItem(e, i[this.valueProperty])}"
+									@keydown="${(e: KeyboardEvent) => {
+										if (e.key === "Enter" || e.key === " ") {
+											e.preventDefault();
+											void this.onClickItem(e, i[this.valueProperty]);
+										}
+									}}"
+								>
 									${this.renderItem(i, index, items, isSelected)}
 								</div>
 							`;

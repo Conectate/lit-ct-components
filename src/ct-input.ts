@@ -394,6 +394,9 @@ export class CtInput extends CtLit {
 	/** determinate if input es invalid */
 	@property({ type: Boolean }) invalid = false;
 
+	@property({ type: Boolean }) combobox = false;
+	@property({ type: Boolean }) expanded = false;
+
 	/** determinate if input es invalid */
 	@property({ type: Boolean }) active = false;
 
@@ -446,12 +449,18 @@ export class CtInput extends CtLit {
 					<div class="row">
 						<slot name="prefix"></slot>
 						<div class="row">
-							${this.errorMessage && html` <label class="float-label error" for="input" aria-live="assertive">${this.errorMessage}</label> `}
-							${this.placeholder && html` <label class="float-label" for="input" aria-live="assertive">${this.placeholder}</label> `}
+							${this.invalid && this.errorMessage ? html` <span id="error" class="float-label error">${this.errorMessage}</span> ` : html``}
+							${this.placeholder ? html` <span class="float-label">${this.placeholder}</span> ` : html``}
 							<input
 								id="input"
 								part="input"
+								role=${ifDefined(this.combobox ? "combobox" : undefined)}
+								aria-haspopup=${ifDefined(this.combobox ? "listbox" : undefined)}
+								aria-autocomplete=${ifDefined(this.combobox ? "list" : undefined)}
+								aria-expanded=${ifDefined(this.combobox ? String(this.expanded) : undefined)}
 								class=${classMap({ "has-value": !this.isEmpty, error: this.invalid && this.errorMessage })}
+								aria-invalid=${ifDefined(this.invalid ? "true" : undefined)}
+								aria-describedby=${ifDefined(this._describedBy)}
 								@focus=${this._onFocus}
 								@blur=${this._onBlur}
 								@input=${this._onInput}
@@ -461,6 +470,7 @@ export class CtInput extends CtLit {
 								.size=${this.size}
 								?autofocus=${this.autofocus}
 								?readonly=${this.readonly}
+								?required=${this.required}
 								?multiple=${this.multiple}
 								?disabled=${this.disabled}
 								autocomplete=${this.autocomplete as any}
@@ -477,7 +487,7 @@ export class CtInput extends CtLit {
 							/>
 						</div>
 						<slot name="suffix"></slot>
-						${this.charCounter ? html` <div class="charCount">${this.countChar}/${this.maxlength > 1_000_000 ? "1000+" : this.maxlength}</div> ` : ``}
+						${this.charCounter ? html` <div id="char-count" class="charCount">${this.countChar}/${this.maxlength > 1_000_000 ? "1000+" : this.maxlength}</div> ` : ``}
 					</div>
 					<div class="underline"></div>
 				</div>
@@ -512,6 +522,13 @@ export class CtInput extends CtLit {
 
 	focus() {
 		this.$input?.focus();
+	}
+
+	private get _describedBy(): string | undefined {
+		const ids: string[] = [];
+		if (this.invalid && this.errorMessage) ids.push("error");
+		if (this.charCounter) ids.push("char-count");
+		return ids.length ? ids.join(" ") : undefined;
 	}
 
 	/** @deprecated */

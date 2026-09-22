@@ -2,8 +2,10 @@ import "./ct-select-dialog.js";
 
 import { PropertyValues, TemplateResult, css, html } from "lit";
 
+import { ifDefined } from "lit/directives/if-defined.js";
+
 import { sleep } from "./ct-helpers.js";
-import { CtLit, customElement, property, query } from "./ct-lit.js";
+import { CtLit, customElement, property, query, state } from "./ct-lit.js";
 import { showCtSelect } from "./ct-select-dialog.js";
 
 export interface KeyValueCtSelect<V = any> {
@@ -291,6 +293,7 @@ export class CtSelect<T extends KeyValueCtSelect = KeyValueCtSelect> extends CtL
 	 */
 	@property({ type: Boolean }) searchable: boolean = false;
 	@property({ type: Boolean }) required: boolean = false;
+	@state() private _expanded = false;
 
 	_value?: T["value"];
 	_text: any;
@@ -354,10 +357,22 @@ export class CtSelect<T extends KeyValueCtSelect = KeyValueCtSelect> extends CtL
 			<div id="c">
 				${this.label ? html` <label class="label h4" for="input">${this.label}</label> ` : ""}
 				<div id="container" @click="${this.onClickContainer}" class="${this.invalid ? "error" : ""}">
-					${this.placeholder && html` <label class="float-label">${this.placeholder}</label> `}
+					${this.placeholder ? html` <span class="float-label">${this.placeholder}</span> ` : ""}
 					<slot name="prefix"></slot>
-					<input id="input" .value="${this.valuePlaceholder}" placeholder="${this.placeholder || this.raw_placeholder}" ?disabled=${this.disabled} />
-					<div class="icon">
+					<input
+						id="input"
+						role="combobox"
+						aria-haspopup="dialog"
+						aria-expanded="${this._expanded ? "true" : "false"}"
+						aria-invalid="${ifDefined(this.invalid ? "true" : undefined)}"
+						aria-readonly="true"
+						.value="${this.valuePlaceholder}"
+						placeholder="${this.placeholder || this.raw_placeholder}"
+						?disabled=${this.disabled}
+						?required=${this.required}
+						@keydown="${this._onComboboxKeydown}"
+					/>
+					<div class="icon" aria-hidden="true">
 						<svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" style="pointer-events: none; display: block; width: 100%; height: 100%;fill:currentColor">
 							<g><path d="M7 10l5 5 5-5z"></path></g>
 						</svg>
@@ -498,6 +513,13 @@ export class CtSelect<T extends KeyValueCtSelect = KeyValueCtSelect> extends CtL
 		}
 	}
 
+	private _onComboboxKeydown(e: KeyboardEvent) {
+		if (e.key === "Enter" || e.key === " ") {
+			e.preventDefault();
+			this.onClickContainer();
+		}
+	}
+
 	/**
 	 * Handle clic event of ct-select
 	 * @param e Event-click
@@ -515,6 +537,7 @@ export class CtSelect<T extends KeyValueCtSelect = KeyValueCtSelect> extends CtL
 	async showDialog(): Promise<void> {
 		this.computeOptionsInDOM();
 		this.invalid = false;
+		this._expanded = true;
 		let ctSelect = showCtSelect<T["value"]>(this.ttl ? this.ttl : this.label, this._orderedItems, this.value, this.okPlaceholder, this.cancelPlaceholder, {
 			multi: this.multi,
 			searchable: this.searchable,
@@ -523,7 +546,12 @@ export class CtSelect<T extends KeyValueCtSelect = KeyValueCtSelect> extends CtL
 			valueProperty: this.valueProperty
 		});
 		if (this.renderItem) ctSelect.dialog.renderItem = this.renderItem;
-		let value = await ctSelect.result;
+		let value: T["value"] | undefined;
+		try {
+			value = await ctSelect.result;
+		} finally {
+			this._expanded = false;
+		}
 		if (value !== undefined) {
 			let old = this.value;
 			this.value = value;

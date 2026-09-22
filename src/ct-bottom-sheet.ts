@@ -145,7 +145,8 @@ export class CtBottomSheet extends LitElement {
 				border-top: 1px solid var(--bottom-sheet-border-color, #8181811c);
 			}
 
-			label {
+			label,
+			h2 {
 				white-space: var(--arc-font-nowrap-white-space);
 				overflow: var(--arc-font-nowrap-overflow);
 				text-overflow: var(--arc-font-nowrap-text-overflow);
@@ -162,6 +163,7 @@ export class CtBottomSheet extends LitElement {
 				flex-direction: row;
 				align-items: center;
 				padding: 0 24px 12px;
+				margin: 0;
 			}
 
 			[hidden] {
@@ -201,6 +203,8 @@ export class CtBottomSheet extends LitElement {
 	/**
 	 * Removes padding from the element styles
 	 */
+	@property({ type: String, reflect: true }) role = "dialog";
+	@property({ type: String, reflect: true, attribute: "aria-modal" }) ariaModal = "true";
 	@property({ type: Boolean, reflect: true }) noPadding = false;
 	opened: boolean;
 	sizingTarget!: HTMLElement;
@@ -208,12 +212,12 @@ export class CtBottomSheet extends LitElement {
 
 	render() {
 		const { label } = this;
-		return html`<div class="draggable"></div>
-			${label ? html`<label>${label}</label>` : ""}
+		return html`<div class="draggable" aria-hidden="true"></div>
+			${label ? html`<h2 id="sheet-title">${label}</h2>` : ""}
 			<div class="scrollable">
 				<slot></slot>
 			</div>
-			<button @click=${this.close}>${this.closelabel}</button>`;
+			<button type="button" @click=${this.close}>${this.closelabel}</button>`;
 	}
 
 	open() {}
@@ -240,6 +244,7 @@ export class CtBottomSheet extends LitElement {
 
 	connectedCallback() {
 		super.connectedCallback();
+		this.setAttribute("aria-hidden", "true");
 		this.addEventListener("transitionend", this.__onTransitionEnd);
 	}
 
@@ -250,6 +255,16 @@ export class CtBottomSheet extends LitElement {
 
 	firstUpdated() {
 		this.sizingTarget = this.scrollTarget;
+		this._syncSheetName();
+	}
+
+	protected updated(): void {
+		this._syncSheetName();
+	}
+
+	private _syncSheetName() {
+		const name = this.label.trim() || "Bottom sheet";
+		if (this.getAttribute("aria-label") !== name) this.setAttribute("aria-label", name);
 	}
 
 	_openedChanged(opened: boolean) {
@@ -258,15 +273,6 @@ export class CtBottomSheet extends LitElement {
 				currentSheet.close();
 			}
 			currentSheet = this;
-			this.dispatchEvent(
-				new CustomEvent("iron-announce", {
-					bubbles: true,
-					composed: true,
-					detail: {
-						text: "Menu opened"
-					}
-				})
-			);
 		} else if (currentSheet === this) {
 			currentSheet = null;
 		}
@@ -278,6 +284,7 @@ export class CtBottomSheet extends LitElement {
 	_renderOpened() {
 		const node = this;
 		node.classList.add("bottom-sheet-open");
+		node.removeAttribute("aria-hidden");
 	}
 
 	/**
@@ -286,6 +293,7 @@ export class CtBottomSheet extends LitElement {
 	_renderClosed() {
 		const node = this;
 		node.classList.remove("bottom-sheet-open");
+		node.setAttribute("aria-hidden", "true");
 	}
 
 	/**

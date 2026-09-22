@@ -72,7 +72,7 @@ export class CtTabs extends CtLit {
 	render() {
 		return html`
 			<div class="tabs-container">
-				<nav class="tabs" id="container">
+				<nav class="tabs" id="container" role="tablist" @keydown=${this._onTabKeydown}>
 					<slot id="content"></slot>
 				</nav>
 			</div>
@@ -138,6 +138,20 @@ export class CtTabs extends CtLit {
 				}
 			});
 		}
+	}
+
+	private _onTabKeydown(e: KeyboardEvent) {
+		if (!this.tabs?.length) return;
+		const current = Math.max(0, this.tabs.findIndex(tab => tab.selected));
+		let next = current;
+		if (e.key === "ArrowRight") next = (current + 1) % this.tabs.length;
+		else if (e.key === "ArrowLeft") next = (current - 1 + this.tabs.length) % this.tabs.length;
+		else if (e.key === "Home") next = 0;
+		else if (e.key === "End") next = this.tabs.length - 1;
+		else return;
+		e.preventDefault();
+		this.selected = `${next}`;
+		this.tabs[next]?.focus();
 	}
 
 	isOverflown() {

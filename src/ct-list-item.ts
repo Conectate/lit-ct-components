@@ -200,19 +200,20 @@ export class CtListItem extends CtLit {
 	 * @returns Rendered template
 	 */
 	render() {
-		let tag = this.role == "button" ? literal`button` : literal`div`;
-		let button = html`<${tag} class="btn" @click=${this.closeMenu} aria-label=${this.text} role=${this.role}>
+		const href = this.href || this.link;
+		const inner = html`
 			<slot name="prefix"></slot>
-			${this.icon || this.svg ? html`<ct-icon class="space" svg=${this.svg} icon=${ifDefined(this.icon ? this.icon : undefined)}></ct-icon>` : html`<div class="space"></div>`}
+			${this.icon || this.svg ? html`<ct-icon aria-hidden="true" class="space" svg=${this.svg} icon=${ifDefined(this.icon ? this.icon : undefined)}></ct-icon>` : html`<div class="space" aria-hidden="true"></div>`}
 			<div class="text">
 				<span>${this.text}<slot></slot></span>
 				<slot name="suffix"></slot>
 			</div>
-		</${tag}>`;
-
-		let href = this.href || this.link;
-		if (href) return html`<a href="${href}" target="${ifDefined(this.target)}"> ${button}</a> `;
-		return button;
+		`;
+		if (href) {
+			return html`<a class="btn" role="menuitem" tabindex="-1" href="${href}" target="${ifDefined(this.target)}" @click=${this.closeMenu}>${inner}</a>`;
+		}
+		let tag = this.role == "button" ? literal`button` : literal`div`;
+		return html`<${tag} class="btn" @click=${this.closeMenu} role=${this.role} tabindex="-1">${inner}</${tag}>`;
 	}
 
 	/**

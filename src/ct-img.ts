@@ -12,7 +12,6 @@
 import { LitElement, css, html } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
-import { ifDefined } from "lit/directives/if-defined.js";
 /**
  * An advanced image loader component that provides lazy loading functionality with various display options.
  *
@@ -186,8 +185,8 @@ export class CtImg extends LitElement {
 	render() {
 		let classes = { r: this.round };
 		return html`
-			<img id="img" alt=${ifDefined(this.alt)} @load=${this._onImgLoad} @error=${this._onImgError} />
-			<div id="divimg" class=${classMap(classes)}></div>
+			<img id="img" alt=${this.alt} @load=${this._onImgLoad} @error=${this._onImgError} />
+			<div id="divimg" aria-hidden="true" class=${classMap(classes)}></div>
 			<slot></slot>
 		`;
 	}
