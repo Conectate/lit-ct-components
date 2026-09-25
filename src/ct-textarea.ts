@@ -216,6 +216,7 @@ export class CtTextarea extends CtLit {
 				font-weight: 700;
 				display: block;
 				position: absolute;
+				pointer-events: none;
 				top: 6px;
 				font-size: 0.75em;
 				color: #676767;
@@ -282,9 +283,9 @@ export class CtTextarea extends CtLit {
 	render() {
 		return html`
 			<div class="inbody">
-				${this.label ? html`<label for="input" class="label">${this.label}</label>` : html``}
+				${this.label ? html`<label class="label" @click=${() => this.focus()}>${this.label}</label>` : html``}
 
-				<div id="container" class=${classMap({ "has-value": !this.isEmpty, error: this.invalid, active: this.active })}>
+				<div id="container" @click=${() => this.focus()} class=${classMap({ "has-value": !this.isEmpty, error: this.invalid, active: this.active })}>
 					<div class="row">
 						<slot name="prefix"></slot>
 						<div class="row">
