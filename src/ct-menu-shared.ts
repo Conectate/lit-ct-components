@@ -135,6 +135,35 @@ export type FloatingMenuOwner = HTMLElement & { opened: boolean; close(): void }
 /** Maps a floating panel element to its owning menu/submenu. */
 export const floatingMenuOwners = new WeakMap<Element, FloatingMenuOwner>();
 
+/** Root `ct-menu` instances that are opening or open. Submenus are not tracked. */
+const openRootMenus = new Set<FloatingMenuOwner>();
+
+/**
+ * Closes every other root `ct-menu` so only one is open.
+ * Panels already in `document.body` are closed through their owner.
+ * `ct-submenu` panels are ignored so a nested menu can stay open with its parent.
+ */
+export function closeOtherRootMenus(current: FloatingMenuOwner) {
+	const closing = new Set<FloatingMenuOwner>();
+
+	for (const owner of openRootMenus) {
+		if (owner !== current) closing.add(owner);
+	}
+
+	for (const panel of document.body.querySelectorAll("[data-ct-floating-menu='ct-menu']")) {
+		const owner = floatingMenuOwners.get(panel);
+		if (owner && owner !== current) closing.add(owner);
+	}
+
+	for (const owner of closing) owner.close();
+	openRootMenus.add(current);
+}
+
+/** Drops a root menu from the exclusive-open set once its panel is gone or the open was aborted. */
+export function releaseRootMenu(owner: FloatingMenuOwner) {
+	openRootMenus.delete(owner);
+}
+
 let floatingId = 0;
 
 /**

@@ -4,12 +4,14 @@ import { html } from "lit";
 import { CtLit, css, customElement, property, query } from "./ct-lit.js";
 import {
 	closeFloatingMenuSurface,
+	closeOtherRootMenus,
 	createFloatingMenuPanel,
 	getFloatingMenuSurface,
 	isEventInsideMenuTree,
 	menuPanelStyles,
 	menuTriggerControl,
 	openFloatingMenuSurface,
+	releaseRootMenu,
 	setTransformOrigin,
 	shouldKeepMenuOpen,
 	staggerMenuItems,
@@ -33,7 +35,8 @@ const ALIGN_TO_PLACEMENT: Record<Align, Placement> = {
  * @element ct-menu
  * @description A dropdown menu component that displays a list of selectable items.
  * The menu surface is portaled to `document.body` with `position: fixed` so it is
- * not clipped by overflow/transform ancestors.
+ * not clipped by overflow/transform ancestors. Only one `ct-menu` is open at a time;
+ * opening another removes the previous root menu. `ct-submenu` panels stay with their parent.
  * @slot - Contains the menu items to be displayed when opened
  * @slot trigger - The trigger element that opens/closes the dropdown menu
  * @slot dropdown-trigger - (Deprecated) The trigger element that opens/closes the dropdown menu
@@ -177,8 +180,14 @@ export class CtMenu extends CtLit implements FloatingMenuOwner {
 
 	private async _openPanel() {
 		this._closeGeneration++;
+		// Register before the first await so a second menu opened in the same turn
+		// closes this one even if its panel is not in `document.body` yet.
+		closeOtherRootMenus(this);
 		await this.updateComplete;
-		if (!this.opened) return;
+		if (!this.opened || !this.isConnected) {
+			releaseRootMenu(this);
+			return;
+		}
 
 		if (!this._panel) {
 			this._panel = createFloatingMenuPanel(this, menuPanelStyles);
@@ -204,7 +213,10 @@ export class CtMenu extends CtLit implements FloatingMenuOwner {
 	private async _teardownPanel(options?: { immediate?: boolean }) {
 		this._stopPositioning();
 
-		if (!this._panel) return;
+		if (!this._panel) {
+			if (!this.opened) releaseRootMenu(this);
+			return;
+		}
 
 		const panel = this._panel;
 		const generation = ++this._closeGeneration;
@@ -226,6 +238,7 @@ export class CtMenu extends CtLit implements FloatingMenuOwner {
 		panel.removeEventListener("click", this._onPanelClick);
 		panel.remove();
 		this._panel = null;
+		releaseRootMenu(this);
 	}
 
 	private _onPanelClick = (e: Event) => {

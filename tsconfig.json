@@ -7,7 +7,8 @@
             "esnext.array",
             "esnext",
             "es2020",
-            "dom"
+            "dom",
+            "dom.iterable"
         ],
         "declaration": true,
         "declarationMap": true,
